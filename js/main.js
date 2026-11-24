@@ -68,13 +68,25 @@
     });
   });
 
-  // SMIL gradient animation on the ribbon loop
+  // SMIL ribbon animations: paused for reduced motion, and whenever their
+  // section is off-screen (they morph big paths every frame otherwise).
   const smilSvgs = $$('svg.has-smil');
   const syncSmil = () => smilSvgs.forEach((s) => {
     if (typeof s.pauseAnimations !== 'function') return;
-    reduce ? s.pauseAnimations() : s.unpauseAnimations();
+    const sec = s.closest('.section');
+    const off = sec && sec.classList.contains('is-offscreen');
+    reduce || off ? s.pauseAnimations() : s.unpauseAnimations();
   });
   syncSmil();
+
+  // CSS animations are paused by `.is-offscreen` (see style.css)
+  const pauseIO = new IntersectionObserver((entries) => {
+    entries.forEach((e) => e.target.classList.toggle('is-offscreen', !e.isIntersecting));
+    syncSmil();
+  }, { rootMargin: '120px 0px' });
+  $$('.section').forEach((s) => pauseIO.observe(s));
+
+  $$('.js-year').forEach((el) => { el.textContent = new Date().getFullYear(); });
 
   /* =========================================================
      NAVBAR — scroll-spy, sliding underline, scrolled state
@@ -146,14 +158,12 @@
 
   function applyParallax() {
     if (!parallaxEnabled()) {
-      ['--wave-x', '--wave-y', '--girl-x', '--girl-y'].forEach((p) => hero.style.removeProperty(p));
+      ['--wave-x', '--wave-y'].forEach((p) => hero.style.removeProperty(p));
       return;
     }
     const y = Math.min(window.scrollY, hero.offsetHeight);
     hero.style.setProperty('--wave-x', (-mx * 6).toFixed(2) + 'px');
     hero.style.setProperty('--wave-y', (y * 0.12 - my * 4).toFixed(2) + 'px');
-    hero.style.setProperty('--girl-x', (mx * 12).toFixed(2) + 'px');
-    hero.style.setProperty('--girl-y', (y * -0.07 + my * 8).toFixed(2) + 'px');
   }
 
   function update() {
@@ -256,8 +266,11 @@
   let cardInView = false;
   let swiped = false;
 
-  // preload every sample so cross-fades never flash
-  SERVICES.forEach((s) => s.images.forEach((src) => { const im = new Image(); im.src = src; }));
+  // preload every sample (once the browser is idle) so cross-fades never flash
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 1200)))(() => {
+    SERVICES.forEach((s) => s.images.forEach((src) => { const im = new Image(); im.src = src; }));
+  });
+  dotsWrap.style.setProperty('--autoplay', AUTOPLAY_MS + 'ms');
 
   const dots = SERVICES.map((s, i) => {
     const b = document.createElement('button');
@@ -322,12 +335,32 @@
   const next = () => go(index + 1);
   const prev = () => go(index - 1);
 
-  function stopAutoplay() { clearInterval(timer); timer = null; }
+  function stopAutoplay() {
+    clearInterval(timer); timer = null;
+    dotsWrap.classList.remove('is-playing');
+  }
   function startAutoplay() {
     stopAutoplay();
     if (reduce || hovering || focused || !cardInView || document.hidden || lightbox.open) return;
     timer = setInterval(next, AUTOPLAY_MS);
+    // restart the active dot's fill so it stays in step with the timer
+    void dotsWrap.offsetWidth;
+    dotsWrap.classList.add('is-playing');
   }
+
+  // gentle 3D tilt + spotlight that follow the pointer (mouse/trackpad only)
+  card.addEventListener('pointermove', (e) => {
+    if (!mqFine.matches || reduce) return;
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    card.style.setProperty('--ry', ((px - 0.5) * 5).toFixed(2) + 'deg');
+    card.style.setProperty('--rx', ((0.5 - py) * 6).toFixed(2) + 'deg');
+    card.style.setProperty('--gx', (px * 100).toFixed(1) + '%');
+    card.style.setProperty('--gy', (py * 100).toFixed(1) + '%');
+  });
+  card.addEventListener('pointerleave', () => {
+    ['--rx', '--ry'].forEach((p) => card.style.removeProperty(p));
+  });
 
   playBtn.addEventListener('click', (e) => { e.stopPropagation(); next(); startAutoplay(); });
 

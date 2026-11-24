@@ -30,6 +30,12 @@
   --th: min(var(--u), 2.15px); /* hero line */
   --ta: min(var(--u), 2.2px);  /* "One place for everything" */
   --lh: 1.25;
+  /* space above each section heading: follows the design scale, but stops
+     growing on wide screens (like the text does) and never hides under the nav */
+  --sec-top: max(80px, calc(48 * var(--t)));
+  /* below ~1100px the About text wraps onto more lines than the design
+     allowed for, so the hammock art moves down to keep clear of it */
+  --about-push: clamp(0px, calc((1100px - 100vw) * .2), 70px);
 
   color-scheme: light;
 }
@@ -60,6 +66,17 @@ body.no-scroll { overflow: hidden; }
 
 img { max-width: none; }
 button { font: inherit; color: inherit; }
+
+::selection { background: rgba(102, 25, 151, .18); color: var(--deep); }
+html { scrollbar-color: rgba(102, 25, 151, .45) transparent; }
+p { text-wrap: pretty; }
+
+/* Pause every looping animation in a section while it is off-screen
+   (toggled from JS). Saves a lot of CPU/battery: the hero alone runs
+   ~20 animations, several of them morphing large SVG paths. */
+.is-offscreen, .is-offscreen *, .is-offscreen *::before, .is-offscreen *::after {
+  animation-play-state: paused !important;
+}
 
 .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
@@ -210,15 +227,12 @@ main.page {
   transition: transform .5s cubic-bezier(.2, .7, .2, 1);
 }
 .layer-wave { z-index: 2; transform: translate3d(var(--wave-x, 0px), var(--wave-y, 0px), 0); }
-.layer-girl { z-index: 1; transform: translate3d(var(--girl-x, 0px), var(--girl-y, 0px), 0); }
+.layer-girl { z-index: 1; } /* the illustrations stay still: no float, sway or parallax */
 
 .wave-wipe, .wave-svg, .loop-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .thin-line { fill: none; stroke-width: 1; stroke-linecap: round; }
 
-.girl-float {
-  position: absolute; inset: 0;
-  animation: float 4s ease-in-out infinite alternate;
-}
+.girl-float { position: absolute; inset: 0; }
 /* cream backdrop so the illustration can multiply onto it (as in the design) */
 .girl-float::before {
   content: ""; position: absolute; inset: -40px; background: var(--cream);
@@ -229,40 +243,20 @@ main.page {
   position: absolute;
   left: 58.5%; top: 19.55%; width: 35.46%;
   aspect-ratio: 394 / 510;
-  transform-origin: 53% 98%;               /* sits on the cushion */
-  animation: sway 7s ease-in-out infinite, breathe 3.8s ease-in-out infinite;
 }
 .girl-img { position: absolute; inset: 0; width: 100%; height: 100%; }
 .girl-head {
   position: absolute;
   left: 32.487%; top: 0; width: 43.655%; height: auto;
-  transform-origin: 48.8% 82%;             /* the neck */
-  animation: headTilt 6.5s ease-in-out infinite;
 }
 .girl-arm {
   position: absolute;
   left: 70.051%; top: 7.059%; width: 21.32%; height: 38.431%;
-  transform-origin: 23.8% 90.8%;           /* the elbow */
-  animation: sip 8s ease-in-out infinite;
 }
 .arm-img { position: absolute; inset: 0; width: 100%; height: 100%; }
 .steam {
   position: absolute;
   left: 40.5%; top: 3.06%; width: 23.8%; height: auto;
-  transform-origin: 50% 100%;
-  animation: steam 3.2s ease-in-out infinite;
-}
-.steam-wisps {
-  position: absolute;
-  left: 26%; top: -18%; width: 54%; height: 46%;
-  overflow: visible;
-}
-.wisp {
-  fill: none; stroke: #8C847C; stroke-width: 1.5; stroke-linecap: round;
-  opacity: 0;
-  transform-box: fill-box; transform-origin: 50% 100%;
-  animation: rise 3.6s ease-in-out infinite;
-  animation-delay: calc(var(--k) * 1.2s);
 }
 
 .hero-copy {
@@ -321,11 +315,11 @@ main.page {
 /* =========================================================
    ABOUT
    ========================================================= */
-.about { height: calc(458.4 * var(--u)); }
+.about { height: calc(458.4 * var(--u) + var(--about-push)); }
 .about-text {
   position: absolute; z-index: 2;
   left: calc(19.4 * var(--u));
-  top: calc(55.8 * var(--u));
+  top: var(--sec-top);
 }
 .about-text p, .service-text p {
   margin: calc(4.6 * var(--t)) 0 0 calc(4.4 * var(--t));
@@ -335,7 +329,7 @@ main.page {
 }
 .about-text p + p { margin-top: calc(10 * var(--t)); max-width: calc(495 * var(--t)); }
 
-.about-art { position: absolute; inset: 0; z-index: 1; }
+.about-art { position: absolute; inset: var(--about-push) 0 0 0; z-index: 1; }
 .about-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 
 /* draw-in is driven from JS (stroke-dashoffset attribute) — see drawStroke() */
@@ -349,9 +343,8 @@ main.page {
   position: absolute;
   left: 5.793%; top: 49.15%; width: 65.19%; height: auto;
   mix-blend-mode: multiply;
-  transform-origin: 56% 10%;
-  animation: swing 5.5s ease-in-out infinite alternate;
 }
+.js .about-man[data-reveal] { translate: none; } /* fade in only, no slide */
 
 .tagline {
   position: absolute; z-index: 2;
@@ -383,7 +376,7 @@ main.page {
 .service-text {
   position: absolute; z-index: 2;
   left: calc(19.4 * var(--u));
-  top: calc(55.3 * var(--u));
+  top: var(--sec-top);
 }
 .service-art { position: absolute; inset: 0; }
 .service-back, .service-front {
@@ -402,10 +395,19 @@ main.page {
   background: var(--card);
   border-radius: calc(10.15 * var(--u));
   box-shadow: var(--shadow);
+  /* --rx/--ry: pointer tilt, set from JS on fine pointers */
+  transform: perspective(1400px) translateY(var(--lift, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transition: transform .5s var(--ease), box-shadow .5s var(--ease), opacity .8s var(--ease), translate .8s var(--ease);
   touch-action: pan-y;
 }
-.card:hover { transform: translateY(-6px); box-shadow: 0 20px 44px rgba(66, 16, 98, .2); }
+.card:hover { --lift: -6px; box-shadow: 0 20px 44px rgba(66, 16, 98, .2); }
+/* soft brand-tinted spotlight that follows the pointer */
+.card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgba(242, 106, 27, .09), rgba(104, 26, 149, .04) 35%, transparent 65%);
+  opacity: 0; transition: opacity .5s; pointer-events: none;
+}
+.card:hover::before { opacity: 1; }
 .card:focus-visible { outline-offset: 6px; border-radius: calc(10.15 * var(--u)); }
 
 .card-media { position: absolute; left: 9.69%; top: 12.11%; width: 46.88%; height: 76.63%; }
@@ -483,18 +485,26 @@ main.page {
 .dot.is-active::before { width: 26px; background: var(--purple); }
 .dot { transition: width .45s var(--ease); }
 .dot:focus-visible { outline-offset: 0; border-radius: 999px; }
+/* while autoplaying, the active pill fills up until the next slide */
+.dots.is-playing .dot.is-active::before { background: rgba(102, 25, 151, .2); }
+.dots.is-playing .dot.is-active::after {
+  content: ""; position: absolute; left: calc(50% - 13px); top: 50%;
+  width: 26px; height: 9px; translate: 0 -50%;
+  border-radius: 999px; background: var(--purple);
+  animation: dotFill var(--autoplay, 5s) linear both;
+}
 
 /* =========================================================
    CONTACT
    ========================================================= */
 .contact {
-  min-height: calc(400.3 * var(--u));
-  padding: calc(55.3 * var(--u)) calc(80 * var(--u)) calc(56 * var(--u)) calc(19.4 * var(--u));
+  padding: var(--sec-top) calc(80 * var(--u)) clamp(64px, calc(48 * var(--t)), 96px) calc(19.4 * var(--u));
 }
 .contact-ribbon {
   position: absolute; z-index: -1;
-  right: 0; top: calc(40 * var(--u));
-  width: calc(80 * var(--u)); height: auto;
+  /* sized from the section's height, so the section can fit its content */
+  right: 0; top: calc(var(--sec-top) * .6);
+  height: calc(100% - var(--sec-top) * .6); width: auto;
   overflow: visible; pointer-events: none;
 }
 .contact-ribbon-path { stroke-dasharray: 1 1; }
@@ -666,6 +676,35 @@ main.page {
 .social a:focus-visible { border-radius: 50%; }
 
 /* =========================================================
+   FOOTER
+   ========================================================= */
+.footer {
+  position: relative;
+  padding: 28px calc(19.4 * var(--u)) 30px;
+  background: var(--cream);
+}
+.footer::before {
+  content: ""; position: absolute; top: 0; left: calc(19.4 * var(--u)); right: calc(19.4 * var(--u));
+  height: 1px; background: var(--grad); opacity: .45;
+}
+.footer-inner {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 16px 32px;
+  padding-right: 72px; /* keep clear of the back-to-top button */
+}
+.footer-logo { display: block; line-height: 0; border-radius: 6px; }
+.footer-logo img { display: block; width: 92px; height: auto; transition: transform .4s var(--ease); }
+.footer-logo:hover img { transform: translateY(-2px) rotate(-2deg); }
+.footer-links { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; padding: 0; list-style: none; }
+.footer-links a {
+  font-size: 14px; font-weight: 500; color: var(--nav-text); text-decoration: none;
+  background: linear-gradient(var(--purple), var(--purple)) 0 100% / 0 1.5px no-repeat;
+  transition: background-size .35s var(--ease), color .3s;
+}
+.footer-links a:hover { color: var(--purple); background-size: 100% 1.5px; }
+.footer-copy { margin: 0; font-size: 13px; color: #6E5C7C; }
+
+/* =========================================================
    LIGHTBOX
    ========================================================= */
 .lightbox {
@@ -717,39 +756,11 @@ main.page {
 /* =========================================================
    KEYFRAMES
    ========================================================= */
-@keyframes float { from { translate: 0 0; } to { translate: 0 -12px; } }
-@keyframes steam {
-  0%, 100% { transform: translateX(0) skewX(0) scaleY(1); opacity: .95; }
-  25% { transform: translateX(-1.5px) skewX(-7deg) scaleY(1.05); opacity: .75; }
-  50% { transform: translateX(1px) skewX(5deg) scaleY(.97); opacity: 1; }
-  75% { transform: translateX(-1px) skewX(-4deg) scaleY(1.04); opacity: .7; }
-}
-@keyframes swing { from { rotate: -1.8deg; } to { rotate: 1.8deg; } }
-@keyframes sway { 0%, 100% { rotate: -.7deg; } 50% { rotate: .9deg; } }
-@keyframes breathe { 0%, 100% { scale: 1 1; } 50% { scale: 1.006 1.013; } }
-@keyframes headTilt {
-  0%, 100% { rotate: 0deg; }
-  18% { rotate: -2.2deg; }
-  42% { rotate: -1.6deg; }
-  64% { rotate: 1.8deg; }
-  84% { rotate: .5deg; }
-}
-@keyframes sip {
-  0%, 28%, 100% { rotate: 0deg; }
-  42%, 60% { rotate: -3deg; }
-  72% { rotate: .8deg; }
-  82% { rotate: 0deg; }
-}
-@keyframes rise {
-  0% { opacity: 0; translate: 0 10px; scale: .8; }
-  30% { opacity: .55; }
-  100% { opacity: 0; translate: 0 -20px; scale: 1.15; }
-}
 @keyframes wipe {
   from { clip-path: inset(0 100% 0 0); translate: -40px 0; }
   to { clip-path: inset(0 0 0 0); translate: 0 0; }
 }
-@keyframes girlIn { from { opacity: 0; translate: 30px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes girlIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeUp { from { opacity: 0; translate: 0 22px; } to { opacity: 1; translate: 0 0; } }
 @keyframes letterIn {
   from { opacity: 0; translate: 0 .35em; filter: blur(6px); }
@@ -761,6 +772,7 @@ main.page {
 }
 @keyframes sweep { from { background-position: 0 0; } to { background-position: 150% 0; } }
 @keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes dotFill { from { clip-path: inset(0 100% 0 0 round 999px); } to { clip-path: inset(0 0 0 0 round 999px); } }
 @keyframes spin { to { transform: rotate(1turn); } }
 @keyframes pop { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -773,6 +785,8 @@ main.page {
    ========================================================= */
 @media (max-width: 767.98px) {
   :root { --m: calc(100cqw / 420); }
+  /* menu links land with the heading clear of the fixed nav bar */
+  html { scroll-padding-top: 56px; }
 
   /* nav + slide-in menu */
   .nav { padding: 12px 16px; align-items: center; }
@@ -843,7 +857,7 @@ main.page {
   .about, .service { height: auto; }
   .about-text, .service-text {
     position: relative; left: auto; top: auto; z-index: 2;
-    padding: 92px 20px 0;
+    padding: 68px 20px 0;
   }
   .heading { font-size: 36px; }
   .about-text p, .service-text p, .about-text p + p {
@@ -864,12 +878,15 @@ main.page {
   .play { width: max(5.917%, 34px); }
   .dots { left: 50%; translate: -50% 0; top: auto; bottom: 0; }
 
-  .contact { padding: 92px 20px 64px; }
+  .contact { padding: 68px 20px 56px; }
   .contact-ribbon { display: none; }
   .contact-grid { grid-template-columns: 1fr; gap: 36px; margin: 16px 0 0; }
   .contact-form { grid-template-columns: 1fr; }
   .btn-send { width: 100%; }
   .to-top { right: 14px; bottom: 14px; width: 46px; height: 46px; }
+  .footer { padding: 26px 20px 84px; }
+  .footer::before { left: 20px; right: 20px; }
+  .footer-inner { flex-direction: column; align-items: flex-start; padding-right: 0; }
   .lightbox-close { top: -12px; right: -8px; }
 }
 
@@ -883,9 +900,7 @@ main.page {
    ========================================================= */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .girl-float, .steam, .about-man, .tag-2:hover,
-  .girl-body, .girl-head, .girl-arm { animation: none !important; }
-  .steam-wisps { display: none; }
+  .tag-2:hover { animation: none !important; }
   .layer { transition: none; }
   .js:not(.is-loaded) .wave-wipe, .js:not(.is-loaded) .layer-girl,
   .js .hero-copy .line, .js .designs .ch { opacity: 1; }
@@ -894,7 +909,7 @@ main.page {
   .js [data-reveal] { opacity: 1; translate: none; transition: none; }
   .js .curl { opacity: 1; transform: none; transition: none; }
   .card, .box, .play, .box img { transition-duration: .01ms !important; }
-  .card:hover { transform: none; }
+  .card, .card:hover { --lift: 0px; --rx: 0deg; --ry: 0deg; }
   .card:hover .box-1, .card:hover .box-2 { transform: none; }
   .play:hover, .play:focus-visible { transform: none !important; }
   .form-success.is-shown .check-ring, .form-success.is-shown .check-tick { animation: none; stroke-dashoffset: 0; }

@@ -6,7 +6,8 @@
   <title>Art Flow Hub</title>
   <meta name="description" content="Art Flow Hub — we turn creative ideas into meaningful designs. Logo design, branding, illustration, UI/UX, social media creatives and packaging.">
   <meta name="theme-color" content="#FFF8E8">
-  <link rel="icon" href="assets/logo.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <script>document.documentElement.classList.add('js');</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +33,7 @@
   <!-- ============ NAVBAR ============ -->
   <header class="nav" id="nav">
     <a class="nav-logo" href="#home" aria-label="Art Flow Hub — home">
-      <img src="assets/logo.png" alt="Art Flow Hub" width="1263" height="606">
+      <img src="assets/logo.webp" alt="Art Flow Hub" width="400" height="192" fetchpriority="high">
     </a>
     <nav class="nav-menu" id="nav-menu" aria-label="Primary">
       <ul class="nav-links">
@@ -58,18 +59,13 @@
         <!-- Illustration (behind the wave, exactly as in the design) -->
         <div class="layer layer-girl">
           <div class="girl-float">
-            <!-- the character: body sways + breathes, head tilts, arm sips, steam rises -->
+            <!-- the character (kept still) -->
             <div class="girl-body">
-              <img class="girl-img" src="assets/hero-girl.png" alt="Illustration of a woman with glasses sitting cross-legged on a big cushion, holding a laptop and a cup of coffee" width="394" height="510">
-              <img class="girl-head" src="assets/hero-head.png" alt="" width="172" height="128">
+              <img class="girl-img" src="assets/hero-girl.webp" fetchpriority="high" alt="Illustration of a woman with glasses sitting cross-legged on a big cushion, holding a laptop and a cup of coffee" width="394" height="510">
+              <img class="girl-head" src="assets/hero-head.webp" alt="" width="172" height="128">
               <div class="girl-arm">
-                <img class="arm-img" src="assets/hero-arm.png" alt="" width="84" height="196">
-                <img class="steam" src="assets/hero-steam.png" alt="" width="20" height="40">
-                <svg class="steam-wisps" viewBox="0 0 40 80" aria-hidden="true" focusable="false">
-                  <path class="wisp" style="--k:0" d="M14 76c-6-8 6-14 0-22s6-14 0-22"/>
-                  <path class="wisp" style="--k:1" d="M22 78c-6-9 7-15 1-24s6-15 0-24"/>
-                  <path class="wisp" style="--k:2" d="M29 74c-5-7 5-13 0-20s5-12 0-19"/>
-                </svg>
+                <img class="arm-img" src="assets/hero-arm.webp" alt="" width="84" height="196">
+                <img class="steam" src="assets/hero-steam.webp" alt="" width="20" height="40">
               </div>
             </div>
             <svg class="loop-svg has-smil" viewBox="0 0 600 342.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
@@ -157,7 +153,7 @@
           <path class="curl" fill="url(#gCurl)" d="M568.70 606.55C559.27 614.92 552.09 624.85 548.030 636.79C538.61 664.55 550.84 694.56 578.02 705.65C585.23 708.59 592.29 710.15 600.00 710.31L600.00 690.70C589.11 690.25 578.84 685.91 572.06 677.41C559.82 662.04 563.45 641.61 576.09 627.15C582.94 619.62 590.88 613.86 600.00 609.51L600.00 587.99C588.43 592.49 577.88 598.38 568.70 606.55Z"/>
         </svg>
 
-        <img class="about-man" data-reveal src="assets/about-man.png" alt="Illustration of a man relaxing in a hammock with headphones, holding a phone" width="1071" height="465">
+        <img class="about-man" data-reveal src="assets/about-man.webp" loading="lazy" decoding="async" alt="Illustration of a man relaxing in a hammock with headphones, holding a phone" width="1071" height="465">
 
         <p class="tagline" data-reveal>
           <span class="tag-1">One place for</span>
@@ -241,7 +237,7 @@
             <animateTransform attributeName="gradientTransform" type="translate" values="0 0; 0 40; 0 -25; 0 0" keyTimes="0; .4; .75; 1" dur="11s" repeatCount="indefinite"/>
             </linearGradient>
         </defs>
-        <path class="contact-ribbon-path" pathLength="1" fill="none" stroke="url(#gContact)" stroke-width="7" stroke-linecap="round"
+        <path class="contact-ribbon-path" pathLength="1" fill="none" stroke="url(#gContact)" stroke-width="8.5" stroke-linecap="round"
           d="M86 8C46 6 20 34 26 70C32 104 70 112 72 86C74 60 40 58 30 96C18 146 36 214 60 262C72 286 80 318 86 352"><animate attributeName="d" dur="7s" repeatCount="indefinite" values="M87.22 10.38C47.32 4.00 18.96 36.34 26.25 71.73C32.81 104.64 70.05 112.00 73.38 86.43C73.28 60.84 39.11 56.96 31.32 97.04C16.96 148.40 34.96 213.78 61.22 260.12C72.63 286.43 78.59 319.88 87.22 354.38;M87.40 9.45C47.34 5.52 19.97 36.03 25.17 72.40C33.41 106.09 71.05 110.30 72.70 84.63C72.61 59.01 38.57 58.79 31.34 98.27C16.56 147.77 35.97 215.54 60.32 259.62C73.36 284.63 78.79 318.27 86.32 353.45;M86.76 7.68C46.59 7.32 21.00 34.53 24.58 71.66C33.19 106.31 71.44 109.60 71.60 83.64C72.75 57.75 38.87 60.16 30.59 98.16C17.00 146.11 37.00 216.39 59.24 260.50C73.29 283.64 79.70 316.50 85.24 351.68;M85.68 6.09C45.48 8.35 21.44 32.72 24.82 69.95C32.27 105.18 70.98 110.30 70.74 84.03C73.63 57.81 39.82 60.27 29.48 96.79C18.03 144.38 37.44 215.84 58.60 262.27C72.47 284.03 80.78 315.62 84.60 350.09;M84.78 5.62C44.68 8.00 21.04 31.66 25.75 68.27C31.19 103.36 69.95 112.00 70.62 85.57C74.72 59.16 40.89 59.04 28.68 94.96C19.04 143.60 37.04 214.22 58.78 263.88C71.37 285.57 81.41 316.12 84.78 349.62;M84.60 6.55C44.66 6.48 20.03 31.97 26.83 67.60C30.59 101.91 68.95 113.70 71.30 87.37C75.39 60.99 41.43 57.21 28.66 93.73C19.44 144.23 36.03 212.46 59.68 264.38C70.64 287.37 81.21 317.73 85.68 350.55;M85.24 8.32C45.41 4.68 19.00 33.47 27.42 68.34C30.81 101.69 68.56 114.40 72.40 88.36C75.25 62.25 41.13 55.84 29.41 93.84C19.00 145.89 35.00 211.61 60.76 263.50C70.71 288.36 80.30 319.50 86.76 352.32;M86.32 9.91C46.52 3.65 18.56 35.28 27.18 70.05C31.73 102.82 69.02 113.70 73.26 87.97C74.37 62.19 40.18 55.73 30.52 95.21C17.97 147.62 34.56 212.16 61.40 261.73C71.53 287.97 79.22 320.38 87.40 353.91;M87.22 10.38C47.32 4.00 18.96 36.34 26.25 71.73C32.81 104.64 70.05 112.00 73.38 86.43C73.28 60.84 39.11 56.96 31.32 97.04C16.96 148.40 34.96 213.78 61.22 260.12C72.63 286.43 78.59 319.88 87.22 354.38"/></path>
       </svg>
 
@@ -329,6 +325,23 @@
       </div>
     </section>
   </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <a class="footer-logo" href="#home" aria-label="Art Flow Hub — back to top">
+        <img src="assets/logo.webp" alt="" width="400" height="192" loading="lazy" decoding="async">
+      </a>
+      <nav aria-label="Footer">
+        <ul class="footer-links">
+          <li><a href="#about">About</a></li>
+          <li><a href="#service">Service</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <p class="footer-copy">&copy; <span class="js-year">2026</span> Art Flow Hub. All rights reserved.</p>
+    </div>
+  </footer>
 
   <!-- Back to top -->
   <button class="to-top" type="button" aria-label="Back to top">
