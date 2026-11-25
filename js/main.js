@@ -241,6 +241,109 @@
   update();
 
 
+  /* =========================================================
+     READ MORE — long text is shortened on phones (see style.css)
+     ========================================================= */
+  $$('[data-readmore]').forEach((box) => {
+    if ($$('p', box).length === 0) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'read-more';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', box.id);
+    btn.innerHTML = '<span>Read more</span><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>';
+    btn.addEventListener('click', () => {
+      const open = box.classList.toggle('is-expanded');
+      btn.setAttribute('aria-expanded', String(open));
+      btn.firstChild.textContent = open ? 'Read less' : 'Read more';
+      requestUpdate(); // ribbons below moved
+    });
+    box.appendChild(btn);
+  });
+
+  /* =========================================================
+     HERO GIRL — head follows the cursor, click the cup to sip
+     ========================================================= */
+  const girlBody = $('.girl-body');
+  const girlHead = $('.girl-head');
+  const girlArm = $('.girl-arm');
+  const cupHit = $('.cup-hit');
+  let lookX = null, lookRaf = 0;
+  const applyLook = () => {
+    lookRaf = 0;
+    if (lookX === null) { girlHead.style.removeProperty('--look'); return; }
+    const r = girlHead.getBoundingClientRect();
+    // -1 (cursor far left) … 1 (far right), relative to the head
+    const dx = Math.max(-1, Math.min(1, (lookX - (r.left + r.width / 2)) / (window.innerWidth / 2)));
+    girlHead.style.setProperty('--look', (dx * 2.5).toFixed(2) + 'deg');
+  };
+  if (girlHead) {
+    hero.addEventListener('pointermove', (e) => {
+      if (!mqFine.matches || reduce) return;
+      lookX = e.clientX;
+      if (!lookRaf) lookRaf = requestAnimationFrame(applyLook);
+    });
+    hero.addEventListener('pointerleave', () => {
+      lookX = null;
+      if (!lookRaf) lookRaf = requestAnimationFrame(applyLook);
+    });
+  }
+  if (cupHit && girlBody && girlArm) {
+    let sipTimer = 0;
+    const endSip = () => { clearTimeout(sipTimer); girlBody.classList.remove('is-sipping'); };
+    cupHit.addEventListener('click', () => {
+      if (reduce || girlBody.classList.contains('is-sipping')) return;
+      girlBody.classList.add('is-sipping');
+      sipTimer = setTimeout(endSip, 1800); // fallback if animationend never fires
+    });
+    girlArm.addEventListener('animationend', (e) => { if (e.animationName === 'sipArm') endSip(); });
+  }
+
+  /* =========================================================
+     MAGNETIC BUTTONS — gently pulled towards a nearby cursor
+     ========================================================= */
+  const magnets = [$('.play'), $('.btn-send'), toTop].filter(Boolean).map((el) => ({ el, x: 0, y: 0 }));
+  const MAG_RANGE = 70, MAG_MAX = 10;
+  let magPtr = null, magRaf = 0;
+  const setMag = (m, x, y) => {
+    if (m.x === x && m.y === y) return;
+    m.x = x; m.y = y;
+    if (!x && !y) { m.el.style.removeProperty('--mag-x'); m.el.style.removeProperty('--mag-y'); return; }
+    m.el.style.setProperty('--mag-x', x + 'px');
+    m.el.style.setProperty('--mag-y', y + 'px');
+  };
+  const capMag = (v) => Math.max(-MAG_MAX, Math.min(MAG_MAX, v));
+  function magTick() {
+    magRaf = 0;
+    magnets.forEach((m) => {
+      const off = !magPtr || m.el.disabled || (m.el === toTop && !toTop.classList.contains('is-visible'));
+      if (off) { setMag(m, 0, 0); return; }
+      // measure without the current pull, so the button doesn't chase itself
+      const r = m.el.getBoundingClientRect();
+      const cx = r.left + r.width / 2 - m.x, cy = r.top + r.height / 2 - m.y;
+      // distance from the pointer to the button's nearest edge
+      const ex = Math.max(Math.abs(magPtr.x - cx) - r.width / 2, 0);
+      const ey = Math.max(Math.abs(magPtr.y - cy) - r.height / 2, 0);
+      const dist = Math.hypot(ex, ey);
+      if (dist >= MAG_RANGE) { setMag(m, 0, 0); return; }
+      const k = 0.25 * (1 - dist / MAG_RANGE);
+      setMag(m,
+        Math.round(capMag((magPtr.x - cx) * k) * 10) / 10,
+        Math.round(capMag((magPtr.y - cy) * k) * 10) / 10);
+    });
+  }
+  const queueMag = () => { if (!magRaf) magRaf = requestAnimationFrame(magTick); };
+  document.addEventListener('pointermove', (e) => {
+    if (!mqFine.matches || reduce || e.pointerType !== 'mouse') {
+      if (magPtr) { magPtr = null; queueMag(); }
+      return;
+    }
+    magPtr = { x: e.clientX, y: e.clientY };
+    queueMag();
+  }, { passive: true });
+  document.documentElement.addEventListener('pointerleave', () => { magPtr = null; queueMag(); });
+  window.addEventListener('scroll', () => { if (magPtr) queueMag(); }, { passive: true });
+
   toTop.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
     $('.nav-logo').focus({ preventScroll: true });

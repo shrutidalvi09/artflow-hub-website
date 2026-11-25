@@ -151,8 +151,10 @@ main.page {
   color: #fff; cursor: pointer;
   box-shadow: 0 10px 24px rgba(102, 25, 151, .28);
   opacity: 0; translate: 0 18px; pointer-events: none;
-  transition: opacity .35s, translate .35s var(--ease), background-position .5s, box-shadow .3s;
+  transform: translate(var(--mag-x, 0px), var(--mag-y, 0px)); /* magnetic pull (main.js) */
+  transition: opacity .35s, translate .35s var(--ease), transform .35s var(--ease), scale .15s, background-position .5s, box-shadow .3s;
 }
+.to-top:active { scale: .92; }
 .to-top svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .to-top.is-visible { opacity: 1; translate: 0 0; pointer-events: auto; }
 .to-top:hover, .to-top:focus-visible { translate: 0 -4px; background-position: 100% 0; box-shadow: 0 16px 30px rgba(210, 81, 40, .3); }
@@ -240,6 +242,7 @@ main.page {
 .layer-girl { z-index: 1; } /* the illustrations stay still: no float, sway or parallax */
 
 .wave-wipe, .wave-svg, .loop-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.layer-wave, .loop-svg { pointer-events: none; } /* decorative: let clicks reach the girl */
 .thin-line { fill: none; stroke-width: 1; stroke-linecap: round; }
 
 .girl-float { position: absolute; inset: 0; }
@@ -255,25 +258,47 @@ main.page {
   aspect-ratio: 394 / 510;
 }
 .girl-img { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Head and arm are feathered patches over the full drawing, so they only ever
+   move a little: large moves would reveal the original underneath. */
 .girl-head {
   position: absolute;
   left: 32.487%; top: 0; width: 43.655%; height: auto;
+  transform-origin: 50% 92%;
+  rotate: var(--look, 0deg);              /* follows the cursor (main.js) */
+  transition: rotate .7s var(--ease);
 }
 .girl-arm {
   position: absolute;
   left: 70.051%; top: 7.059%; width: 21.32%; height: 38.431%;
+  transform-origin: 30% 100%;             /* the elbow */
 }
+/* invisible button over the cup: hover = steam, click / Enter = sip */
+.cup-hit {
+  position: absolute; left: -10%; top: 16%; width: 120%; height: 34%;
+  padding: 0; border: 0; border-radius: 40%;
+  background: none; cursor: pointer;
+}
+.cup-hit:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .arm-img { position: absolute; inset: 0; width: 100%; height: 100%; }
 .steam {
   position: absolute;
   left: 40.5%; top: 3.06%; width: 23.8%; height: auto;
+  pointer-events: none;
+  transition: opacity .25s;
 }
+.girl-arm:hover .steam, .cup-hit:focus-visible ~ .steam { animation: steamPuff 1.6s ease-out infinite; }
+.is-sipping .girl-arm { animation: sipArm 1.6s var(--ease); }
+.is-sipping .girl-head { animation: sipHead 1.6s var(--ease); }
+.is-sipping .steam { opacity: 0; animation: none; }
 
-.hero-copy {
+.hero-text {
   position: absolute; z-index: 3;
   left: calc(21.6 * var(--u));
   top: calc(227.7 * var(--u));
   translate: 0 -50%;
+}
+.read-more { display: none; } /* phones only (see MOBILE) */
+.hero-copy {
   margin: 0;
   color: #fff;
   font-family: var(--f-body); font-weight: 500;
@@ -473,7 +498,8 @@ main.page {
   padding: 0; border: 0; border-radius: 50%;
   background: none; cursor: pointer;
   transform: rotate(0turn) scale(1);
-  transition: transform .6s var(--ease), filter .35s;
+  translate: var(--mag-x, 0px) var(--mag-y, 0px); /* magnetic pull (main.js) */
+  transition: transform .6s var(--ease), translate .35s var(--ease), filter .35s;
 }
 .play svg { display: block; width: 100%; height: 100%; }
 .card:hover .play { transform: rotate(0turn) scale(1.12); filter: brightness(1.1) saturate(1.15); }
@@ -615,7 +641,8 @@ main.page {
   font-family: var(--f-body); font-weight: 600; font-size: 15px; letter-spacing: .02em;
   cursor: pointer;
   box-shadow: 0 10px 22px rgba(102, 25, 151, .25);
-  transition: transform .35s var(--ease), box-shadow .35s var(--ease), background-position .8s var(--ease), opacity .3s;
+  translate: var(--mag-x, 0px) var(--mag-y, 0px); /* magnetic pull (main.js) */
+  transition: transform .35s var(--ease), translate .35s var(--ease), scale .15s, box-shadow .35s var(--ease), background-position .8s var(--ease), opacity .3s;
 }
 .btn-send:hover, .btn-send:focus-visible {
   transform: translateY(-3px);
@@ -623,7 +650,7 @@ main.page {
   box-shadow: 0 16px 30px rgba(210, 81, 40, .3);
 }
 .btn-send:focus-visible { border-radius: 999px; }
-.btn-send:active { transform: translateY(0); }
+.btn-send:active { transform: translateY(0); scale: .97; }
 .btn-send[disabled] { cursor: progress; opacity: .85; }
 .btn-send.is-sending .btn-label::after {
   content: ""; display: inline-block; width: 14px; height: 14px; margin-left: 10px;
@@ -780,6 +807,19 @@ main.page {
 }
 @keyframes drawLine { to { stroke-dashoffset: 0; } }
 @keyframes girlIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes steamPuff {
+  0% { opacity: .35; translate: 0 0; scale: 1; }
+  45% { opacity: 1; }
+  100% { opacity: 0; translate: 0 -45%; scale: 1.25; }
+}
+@keyframes sipArm {
+  0%, 100% { transform: none; }
+  30%, 70% { transform: translateY(-3.5%) rotate(-1.5deg); }
+}
+@keyframes sipHead {
+  0%, 100% { transform: none; }
+  30%, 70% { transform: rotate(3deg); }
+}
 @keyframes fadeUp { from { opacity: 0; translate: 0 22px; } to { opacity: 1; translate: 0 0; } }
 @keyframes letterIn {
   from { opacity: 0; translate: 0 .35em; filter: blur(6px); }
@@ -859,45 +899,85 @@ main.page {
 
   /* hero: wave + copy on top, illustration below */
   .hero { height: auto; }
-  .hero-stage { position: relative; height: calc(645 * var(--m)); translate: 0 calc(var(--hero-p, 0) * -40 * var(--m)); }
+  /* ends where the illustration ends: no empty band before About */
+  .hero-stage { position: relative; height: calc(630 * var(--m)); translate: 0 calc(var(--hero-p, 0) * -40 * var(--m)); }
   .layer { inset: 0 auto auto 0; width: calc(600 * var(--m)); height: calc(342.5 * var(--m)); }
   .layer-wave { transform: none; }
   .layer-girl {
     transform-origin: calc(457 * var(--m)) calc(67 * var(--m));
     transform: translate(calc(-247 * var(--m)), calc(238 * var(--m))) scale(1.18);
   }
-  .hero-copy {
-    left: calc(21.6 * var(--m)); top: calc(227.7 * var(--m));
-    font-size: calc(19.44 * var(--m));
+  .hero-text { left: 20px; top: calc(227.7 * var(--m)); }
+  .hero-copy { font-size: calc(22.5 * var(--m)); line-height: 1.18; }
+  /* cream-yellow on the purple end of the ribbon: ≈ 9:1 contrast; the soft
+     shadow keeps it legible where the gradient turns magenta */
+  .designs {
+    font-size: calc(37 * var(--m)); margin-left: calc(-2.2 * var(--m)); line-height: 1.25;
+    text-shadow: 0 1px 10px rgba(66, 16, 98, .35);
   }
-  .designs { font-size: calc(31.12 * var(--m)); margin-left: calc(-2.2 * var(--m)); }
 
   /* text sections flow; art keeps the design composition */
   .about, .service { height: auto; }
+  /* one vertical rhythm for every section */
+  :root { --sec-gap: 56px; }
   .about-text, .service-text {
     position: relative; left: auto; top: auto; z-index: 2;
-    padding: 68px 20px 0;
+    padding: var(--sec-gap) 20px 0;
   }
   .heading { font-size: 36px; }
   .about-text p, .service-text p, .about-text p + p {
-    margin: 8px 0 0; max-width: none;
-    font-size: 14.5px; line-height: 1.55;
+    margin: 10px 0 0; max-width: none;
+    font-size: 16px; line-height: 1.6;
   }
-  .about-text p + p { margin-top: 12px; }
+  .about-text p + p { margin-top: 14px; }
+
+  /* long text: first lines + "Read more" (button added by main.js) */
+  .js [data-readmore]:not(.is-expanded) p:first-of-type {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden;
+  }
+  .js [data-readmore]:not(.is-expanded) p:not(:first-of-type) { display: none; }
+  .js .read-more {
+    display: inline-flex; align-items: center; gap: 6px;
+    min-height: 44px; margin: 2px 0 0; padding: 0;
+    border: 0; background: none; cursor: pointer;
+    font-family: var(--f-body); font-weight: 600; font-size: 16px; color: var(--purple);
+  }
+  .read-more svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s var(--ease); }
+  .is-expanded > .read-more svg { transform: rotate(180deg); }
 
   .about-art { position: relative; inset: auto; aspect-ratio: 600 / 458.4; margin-top: calc(-170 / 600 * 100%); }
   .tagline { left: auto; right: 20px; top: auto; bottom: 0; }
   .tag-1 { font-size: 26px; }
   .tag-2 { font-size: 28px; }
-  .about { padding-bottom: 28px; }
+  .about { padding-bottom: 0; }
 
-  .service-art { position: relative; inset: auto; aspect-ratio: 600 / 462.7; margin-top: calc(-150 / 600 * 100%); }
-  .card-title { font-size: max(calc(19.8 * var(--u)), 13px); }
-  .card-title-wrap { width: 31%; }
-  .play { width: max(5.917%, 34px); }
-  .dots { left: 50%; translate: -50% 0; top: auto; bottom: 0; }
+  .service-art { position: relative; inset: auto; padding: 24px 16px 0; }
+  .service-back, .service-front { display: none; } /* ribbons are drawn around the desktop card */
+  .card {
+    position: relative; left: auto; top: auto;
+    width: 100%; height: auto; aspect-ratio: 1 / .9;
+    border-radius: 20px;
+  }
+  .card:focus-visible { border-radius: 20px; }
+  .card-media { left: 7%; top: 7%; width: 86%; height: 64%; }
+  .box { border-radius: 14px; }
+  .card-title-wrap { left: 7%; top: auto; bottom: 7%; width: 66%; translate: none; }
+  .card-title { font-size: 22px; line-height: 1.2; }
+  .play { right: 6%; bottom: 6%; width: 52px; }
+  .dots { position: relative; left: auto; top: auto; justify-content: center; gap: 0; margin: 8px 0 -20px; } /* the 44px tap area adds invisible space below the dots */
+  .dot { width: 34px; height: 44px; }
+  .dot::before { width: 12px; height: 12px; border-width: 2px; }
+  .dot.is-active { width: 50px; }
+  .dot.is-active::before { width: 34px; }
+  .dots.is-playing .dot.is-active::after { left: calc(50% - 17px); width: 34px; height: 12px; }
 
-  .contact { padding: 68px 20px 56px; }
+  .contact { padding: var(--sec-gap) 20px var(--sec-gap); }
+  .contact-form { row-gap: 16px; }
+  .field-error:empty { min-height: 0; margin: 0; }
+  .field input, .field select, .field textarea { font-size: 16px; }
+  .field label { font-size: 16px; top: 16px; }
+  .info-list li { font-size: 16px; }
+  .info-list a { display: inline-flex; align-items: center; min-height: 44px; }
   .contact-ribbon { display: none; }
   .contact-grid { grid-template-columns: 1fr; gap: 36px; margin: 16px 0 0; }
   .contact-form { grid-template-columns: 1fr; }
@@ -906,12 +986,15 @@ main.page {
   .footer { padding: 26px 20px 84px; }
   .footer::before { left: 20px; right: 20px; }
   .footer-inner { flex-direction: column; align-items: flex-start; padding-right: 0; }
+  .footer-links { gap: 0 8px; margin-left: -10px; }
+  .footer-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font-size: 16px; background-position: 10px 80%; }
+  .footer-links a:hover { background-size: calc(100% - 20px) 1.5px; }
   .lightbox-close { top: -12px; right: -8px; }
 }
 
 /* very small phones: let the service card breathe */
-@media (max-width: 420px) {
-  .card-title { font-size: 12.5px; }
+@media (max-width: 360px) {
+  .card-title { font-size: 19px; }
 }
 
 /* =========================================================
@@ -934,6 +1017,10 @@ main.page {
   .card, .card:hover { --lift: 0px; --rx: 0deg; --ry: 0deg; }
   .card:hover .box-1, .card:hover .box-2 { transform: none; }
   .play:hover, .play:focus-visible { transform: none !important; }
+  .girl-head { rotate: none; transition: none; }
+  .girl-arm:hover .steam, .cup-hit:focus-visible ~ .steam, .is-sipping .girl-arm, .is-sipping .girl-head { animation: none; }
+  .play, .btn-send { translate: none; }
+  .to-top { transform: none; }
   .form-success.is-shown .check-ring, .form-success.is-shown .check-tick { animation: none; stroke-dashoffset: 0; }
   .form-success.is-shown .success-title, .form-success.is-shown .btn-link { animation: none; }
   .nav-indicator { transition: none; }
