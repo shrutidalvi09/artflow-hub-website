@@ -143,28 +143,15 @@
   onMQ(mqMobile, () => {
     setMenu(false);
     moveIndicator();
-    applyParallax();
   });
 
   /* =========================================================
-     SCROLL — progress bar, nav state, back-to-top, parallax
+     SCROLL — progress bar, nav state, back-to-top
      ========================================================= */
   const hero = $('#home');
   const progress = $('.progress');
   const toTop = $('.to-top');
-  let mx = 0, my = 0, ticking = false;
-
-  function parallaxEnabled() { return !reduce && !mqMobile.matches; }
-
-  function applyParallax() {
-    if (!parallaxEnabled()) {
-      ['--wave-x', '--wave-y'].forEach((p) => hero.style.removeProperty(p));
-      return;
-    }
-    const y = Math.min(window.scrollY, hero.offsetHeight);
-    hero.style.setProperty('--wave-x', (-mx * 6).toFixed(2) + 'px');
-    hero.style.setProperty('--wave-y', (y * 0.12 - my * 4).toFixed(2) + 'px');
-  }
+  let ticking = false;
 
   function update() {
     ticking = false;
@@ -180,7 +167,6 @@
     if (max > 0 && y >= max - 4) setActive(sections[sections.length - 1].id);
     else if (y < 40) setActive('home');
 
-    if (y < heroH + 50) applyParallax();
   }
   const requestUpdate = () => {
     if (!ticking) { ticking = true; requestAnimationFrame(update); }
@@ -189,13 +175,6 @@
   window.addEventListener('resize', () => { requestUpdate(); moveIndicator(); });
   update();
 
-  hero.addEventListener('pointermove', (e) => {
-    if (!mqFine.matches || !parallaxEnabled()) return;
-    mx = (e.clientX / window.innerWidth - 0.5) * 2;
-    my = (e.clientY / window.innerHeight - 0.5) * 2;
-    requestUpdate();
-  });
-  hero.addEventListener('pointerleave', () => { mx = 0; my = 0; requestUpdate(); });
 
   toTop.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
@@ -558,6 +537,5 @@
     reduce = mqReduce.matches;
     syncSmil();
     startAutoplay();
-    applyParallax();
   });
 })();
