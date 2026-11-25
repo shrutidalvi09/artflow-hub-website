@@ -346,12 +346,15 @@ main.page {
 .about-art { position: absolute; inset: var(--about-push) 0 0 0; z-index: 1; }
 .about-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 
-/* draw-in is driven from JS (stroke-dashoffset attribute) — see drawStroke() */
+/* ribbons draw with the scroll: main.js eases the stroke-dashoffset attribute (see RIBBONS) */
 .hammock-draw { stroke-dasharray: 1 1; }
 
 .curl { transform-box: fill-box; transform-origin: 100% 50%; }
-.js .curl { opacity: 0; transform: scale(.7) rotate(-25deg); transition: opacity .9s ease 1.3s, transform 1.1s var(--ease) 1.3s; }
-.js .about-art.is-drawn .curl { opacity: 1; transform: none; }
+/* the curl grows in at the end of the hammock's draw (--curl: 0 → 1, set in main.js) */
+.js .curl {
+  opacity: var(--curl, 0);
+  transform: scale(calc(.7 + .3 * var(--curl, 0))) rotate(calc(-25deg * (1 - var(--curl, 0))));
+}
 
 .about-man {
   position: absolute;
@@ -398,6 +401,7 @@ main.page {
   overflow: visible; pointer-events: none;
 }
 .service-back { z-index: 1; }
+.svc-draw { stroke-dasharray: 1 1; }
 .service-front { z-index: 3; }
 
 .card {
@@ -925,7 +929,7 @@ main.page {
   .is-loaded .thin-line { animation: none; }
   .designs::after, .is-loaded .designs::after { display: none; animation: none; }
   .js [data-reveal] { opacity: 1; translate: none; transition: none; }
-  .js .curl { opacity: 1; transform: none; transition: none; }
+  .js .curl { opacity: 1; transform: none; }
   .card, .box, .play, .box img { transition-duration: .01ms !important; }
   .card, .card:hover { --lift: 0px; --rx: 0deg; --ry: 0deg; }
   .card:hover .box-1, .card:hover .box-2 { transform: none; }

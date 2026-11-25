@@ -149,6 +149,7 @@
      SCROLL — progress bar, nav state, back-to-top
      ========================================================= */
   const hero = $('#home');
+  const clamp01 = (v) => Math.min(1, Math.max(0, v));
   const progress = $('.progress');
   const toTop = $('.to-top');
   let ticking = false;
@@ -167,6 +168,54 @@
     }
   }
 
+  /* ---- RIBBONS: every ribbon draws with the scroll and is complete once its
+     area has fully scrolled into view; scrolling back up rolls it back.
+     The value is eased towards the scroll position each frame, so wheel steps
+     glide instead of jumping. Strokes are animated through the stroke-dashoffset
+     *attribute*: CSS on strokes inside an SVG <mask> is not repainted reliably
+     in Chromium. ---- */
+  const setDash = (el) => (v) => el.setAttribute('stroke-dashoffset', (1 - v).toFixed(4));
+  const aboutArt = $('.about-art');
+  const ribbons = [
+    // [trigger, element, start, end, apply]  start/end: slice of the trigger's 0 → 1 progress
+    [aboutArt, $('.hammock-draw'), 0, 0.85],
+    [aboutArt, aboutArt, 0.75, 1, (v) => aboutArt.style.setProperty('--curl', v.toFixed(3))],
+    [$('#service-card'), $('.service-front .svc-draw'), 0, 0.7],   // orange loop, left
+    [$('#service-card'), $('#mUnder .svc-draw'), 0.15, 0.85],      // U under the card
+    [$('#service-card'), $('.service-back > .svc-draw'), 0.3, 1],  // purple ribbon, right
+    [$('.contact'), $('.contact-ribbon-path'), 0, 1],
+  ].filter(([t, el]) => t && el).map(([trigger, el, a, b, apply]) => ({
+    trigger, a, b, apply: apply || setDash(el), cur: reduce ? 1 : 0, target: 0, shown: -1,
+  }));
+  ribbons.forEach((r) => { r.apply(r.cur); r.shown = r.cur; });
+
+  let ribbonRaf = 0;
+  function ribbonTick() {
+    ribbonRaf = 0;
+    let moving = false;
+    ribbons.forEach((r) => {
+      const d = r.target - r.cur;
+      if (Math.abs(d) > 0.0008) { r.cur += d * 0.12; moving = true; } else r.cur = r.target;
+      if (r.cur !== r.shown) { r.shown = r.cur; r.apply(r.cur); }
+    });
+    if (moving) ribbonRaf = requestAnimationFrame(ribbonTick);
+  }
+  function applyRibbons(y, max) {
+    const vh = window.innerHeight;
+    const atEnd = max > 0 && y >= max - 2;
+    const progress = new Map();
+    ribbons.forEach((r) => {
+      if (!progress.has(r.trigger)) {
+        // 0 when the trigger's top enters at the bottom, 1 once its bottom is in view
+        const rect = r.trigger.getBoundingClientRect();
+        progress.set(r.trigger, atEnd ? 1 : clamp01((vh - rect.top) / Math.max(1, rect.height)));
+      }
+      r.target = reduce ? 1 : clamp01((progress.get(r.trigger) - r.a) / (r.b - r.a));
+      if (reduce) r.cur = 1;
+    });
+    if (!ribbonRaf) ribbonRaf = requestAnimationFrame(ribbonTick);
+  }
+
   function update() {
     ticking = false;
     const y = window.scrollY;
@@ -181,6 +230,7 @@
     if (max > 0 && y >= max - 4) setActive(sections[sections.length - 1].id);
     else if (y < 40) setActive('home');
 
+    applyRibbons(y, max);
     applyHeroScroll(reduce || !heroH ? 0 : Math.round(Math.min(1, Math.max(0, y / heroH)) * 1000) / 1000);
   }
   const requestUpdate = () => {
@@ -212,37 +262,6 @@
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
   $$('[data-reveal]').forEach((el) => revealIO.observe(el));
-
-  // ribbons that draw themselves. Animated through the stroke-dashoffset
-  // *attribute* each frame: CSS transitions on strokes inside an SVG <mask>
-  // are not repainted reliably in Chromium.
-  const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
-  function drawStroke(path, duration) {
-    const t0 = performance.now();
-    const frame = (now) => {
-      const p = Math.min(1, (now - t0) / duration);
-      path.setAttribute('stroke-dashoffset', (1 - easeInOut(p)).toFixed(4));
-      if (p < 1) requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  }
-  const drawTargets = [
-    { trigger: $('.about-art'), path: $('.hammock-draw'), duration: 2000 },
-    { trigger: $('.contact'), path: $('.contact-ribbon-path'), duration: 2200 },
-  ].filter((d) => d.trigger && d.path);
-  if (!reduce) drawTargets.forEach((d) => d.path.setAttribute('stroke-dashoffset', '1'));
-
-  const drawIO = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (!e.isIntersecting) return;
-      e.target.classList.add('is-drawn');
-      const d = drawTargets.find((x) => x.trigger === e.target);
-      if (d && !reduce) drawStroke(d.path, d.duration);
-      else if (d) d.path.setAttribute('stroke-dashoffset', '0');
-      drawIO.unobserve(e.target);
-    });
-  }, { threshold: 0.25 });
-  drawTargets.forEach((d) => drawIO.observe(d.trigger));
 
   /* =========================================================
      SERVICE CAROUSEL
