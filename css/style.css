@@ -220,7 +220,17 @@ main.page {
    HERO
    ========================================================= */
 .hero { height: calc(342.5 * var(--u)); }
-.hero-stage { position: absolute; inset: 0; }
+/* scroll-linked: --hero-p goes 0 → 1 as the hero scrolls away (set in main.js) */
+.hero-stage {
+  position: absolute; inset: 0;
+  translate: 0 calc(var(--hero-p, 0) * -40 * var(--u));
+  opacity: calc(1 - var(--hero-p, 0) * .55);
+  /* dissolve the bottom edge as it lifts, so the illustration's cut edge never shows */
+  --hero-fade: calc(100% - var(--hero-p, 0) * 35%);
+  -webkit-mask-image: linear-gradient(#000 var(--hero-fade), transparent);
+  mask-image: linear-gradient(#000 var(--hero-fade), transparent);
+  will-change: translate, opacity;
+}
 
 .layer {
   position: absolute; inset: 0;
@@ -845,7 +855,7 @@ main.page {
 
   /* hero: wave + copy on top, illustration below */
   .hero { height: auto; }
-  .hero-stage { position: relative; height: calc(645 * var(--m)); }
+  .hero-stage { position: relative; height: calc(645 * var(--m)); translate: 0 calc(var(--hero-p, 0) * -40 * var(--m)); }
   .layer { inset: 0 auto auto 0; width: calc(600 * var(--m)); height: calc(342.5 * var(--m)); }
   .layer-wave { transform: none; }
   .layer-girl {
@@ -907,6 +917,7 @@ main.page {
   html { scroll-behavior: auto; }
   .tag-2:hover { animation: none !important; }
   .layer { transition: none; }
+  .hero-stage { translate: none; opacity: 1; -webkit-mask-image: none; mask-image: none; }
   .js:not(.is-loaded) .wave-wipe, .js:not(.is-loaded) .layer-girl,
   .js .hero-copy .line, .js .designs .ch { opacity: 1; }
   .is-loaded .wave-wipe, .is-loaded .layer-girl, .is-loaded .hero-copy .line, .is-loaded .designs .ch { animation: none; }

@@ -153,6 +153,20 @@
   const toTop = $('.to-top');
   let ticking = false;
 
+  // hero reacts to scroll: colours flow towards the loop, the whole stage fades and lifts.
+  // The ribbon, loop and girl move together, so the ribbon tip never leaves the loop.
+  const waveStops = $$('#gWave stop');
+  let heroP = -1;
+  function applyHeroScroll(p) {
+    if (p === heroP) return;
+    heroP = p;
+    hero.style.setProperty('--hero-p', p.toFixed(3));
+    if (waveStops.length === 4) {
+      waveStops[1].setAttribute('offset', (0.33 + 0.27 * p).toFixed(3));
+      waveStops[2].setAttribute('offset', (0.67 + 0.23 * p).toFixed(3));
+    }
+  }
+
   function update() {
     ticking = false;
     const y = window.scrollY;
@@ -167,6 +181,7 @@
     if (max > 0 && y >= max - 4) setActive(sections[sections.length - 1].id);
     else if (y < 40) setActive('home');
 
+    applyHeroScroll(reduce || !heroH ? 0 : Math.round(Math.min(1, Math.max(0, y / heroH)) * 1000) / 1000);
   }
   const requestUpdate = () => {
     if (!ticking) { ticking = true; requestAnimationFrame(update); }
@@ -537,5 +552,6 @@
     reduce = mqReduce.matches;
     syncSmil();
     startAutoplay();
+    requestUpdate();
   });
 })();
